@@ -1,56 +1,89 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, jsonify
 import numpy as np
 from src.pipelines.prediction_pipeline import CustomData, PredictPipeline
+from flask_cors import CORS
+
 
 application = Flask(__name__)
 app = application
+CORS(app)
 
-@app.route('/')
-def home_page():
-    return render_template('home.html')
+def get_value(data_source, key, cast=None, required=True):
+    val = data_source.get(key)
+    if val is None and required:
+        raise ValueError(f"Missing required field: {key}")
+    if val is None:
+        return None
+    if cast:
+        try:
+            return cast(val)
+        except Exception as e:
+            raise ValueError(f"Invalid value for {key}: {val}. Error: {e}")
+    return val
 
-@app.route('/home')
-def document():
-    return render_template('home.html')
-
-@app.route('/about')
-def about():
-    return render_template('about.html')
-
-@app.route('/features')
-def features():
-    return render_template('features.html')
-
-@app.route('/contact')
-def contact():
-    return render_template('contact.html')
-
-@app.route('/predict', methods=['GET', 'POST'])
+@app.route('/predict', methods=['POST'])
 def predict_datapoint():
-    if request.method == 'GET':
-        return render_template('predict.html')
-    else:
-        # Retrieve form data
+    try:
+        data_json = request.get_json(silent=True)
+        if data_json:
+            src = data_json
+        else:
+            src = request.form.to_dict()
+
+        age = get_value(src, 'age', cast=int)
+        bmi = get_value(src, 'bmi', cast=float)
+        children = get_value(src, 'children', cast=int)
+        sex_raw = get_value(src, "sex", cast=str).strip().lower()
+        if sex_raw in ["male", "m"]:
+            sex = "male"
+        elif sex_raw in ["female", "f"]:
+            sex = "female"
+        else:
+            raise ValueError(f"Invalid sex value: {sex_raw}. Expected 'male' or 'female'.")
+
+        smoker_raw = src.get('smoker', None)
+        region = get_value(src, 'region', cast=str)
+
+        if smoker_raw is None:
+            smoker = "no"  
+        elif isinstance(smoker_raw, bool):
+            smoker = "yes" if smoker_raw else "no"
+        elif isinstance(smoker_raw, str):
+            smoker_lower = smoker_raw.strip().lower()
+            if smoker_lower in ("true", "1", "yes", "y"):
+                smoker = "yes"
+            elif smoker_lower in ("false", "0", "no", "n"):
+                smoker = "no"
+            else:
+                raise ValueError(f"Invalid smoker value: {smoker_raw}")
+        else:
+            smoker = "yes" if int(smoker_raw) == 1 else "no"
+
+
+        region = region.strip().lower()
+
         data = CustomData(
-            age=int(request.form.get('age')),
-            bmi=float(request.form.get('bmi')),
-            children=int(request.form.get('children')),
-            sex=request.form.get('sex'),
-            smoker=request.form.get('smoker'),
-            region=request.form.get('region')  # Match with the form name
+            age=age,
+            bmi=bmi,
+            children=children,
+            sex=sex,
+            smoker=smoker,
+            region=region
         )
-        
-        # Convert form data to DataFrame
+
         final_new_data = data.get_data_as_dataframe()
-        
-        # Predict using the pipeline
         predict_pipeline = PredictPipeline()
         pred = predict_pipeline.predict(final_new_data)
-        
-        # If `pred` is an array or list, round the first element
         results = round(pred[0]) if isinstance(pred, (list, np.ndarray)) else round(pred)
+
         
-        return render_template('prediction.html', final_result=results , age=data.age , bmi=data.bmi ,children=data.children, sex=data.sex, smoker= data.smoker, region= data.region)
+        return jsonify({"premium": results}), 200
+
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 400
+    except Exception as ex:
+        app.logger.exception("Prediction failed")
+        return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    app.run(debug=True)
