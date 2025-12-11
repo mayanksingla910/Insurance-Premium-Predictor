@@ -1,31 +1,29 @@
-'use client';
- 
-import * as React from 'react';
-import { motion, type HTMLMotionProps, type Transition } from 'motion/react';
- 
-import {
-  SlidingNumber,
-  type SlidingNumberProps,
-} from '../sliding-number'; // Adjust the path as needed to point to the correct location of sliding-number
+"use client";
+
+import * as React from "react";
+import { motion, type HTMLMotionProps, type Transition } from "motion/react";
+
+import { SlidingNumber, type SlidingNumberProps } from "../sliding-number"; // Adjust the path as needed to point to the correct location of sliding-number
 // Update the import path below to the correct relative path for your project setup
-import { Button } from '../../button'; 
-import { cn } from '@/lib/utils';
- 
-type CounterProps = HTMLMotionProps<'div'> & {
+import { Button } from "../../button";
+import { cn } from "@/lib/utils";
+import { Users } from "lucide-react";
+
+type CounterProps = HTMLMotionProps<"div"> & {
   number: number;
   setNumber: (number: number) => void;
-  slidingNumberProps?: Omit<SlidingNumberProps, 'number'>;
-  buttonProps?: Omit<React.ComponentProps<typeof Button>, 'onClick'>;
+  slidingNumberProps?: Omit<SlidingNumberProps, "number">;
+  buttonProps?: Omit<React.ComponentProps<typeof Button>, "onClick">;
   transition?: Transition;
 };
- 
+
 function Counter({
   number,
   setNumber,
   className,
   slidingNumberProps,
   buttonProps,
-  transition = { type: 'spring', bounce: 0, stiffness: 300, damping: 30 },
+  transition = { type: "spring", bounce: 0, stiffness: 300, damping: 30 },
   ...props
 }: CounterProps) {
   return (
@@ -34,46 +32,53 @@ function Counter({
       layout
       transition={transition}
       className={cn(
-        'flex items-center gap-x-2 p-1 rounded-lg bg-neutral-100 dark:bg-neutral-800',
-        className,
+        "flex items-center justify-between gap-x-2 p-1 px-2 rounded-lg bg-input",
+        className
       )}
       {...(props as any)}
     >
-        <SlidingNumber
-          number={number}
-          {...slidingNumberProps}
-          className={cn('text-lg', slidingNumberProps?.className)}
-        />
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        <Button
-          size="icon"
-          {...buttonProps}
-          onClick={() => setNumber(number - 1)}
-          className={cn(
-            'bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px]',
-            buttonProps?.className,
-          )}
-        >
-          -
-        </Button>
-      </motion.div>
- 
- 
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-        <Button
-          size="icon"
-          {...buttonProps}
-          onClick={() => setNumber(number + 1)}
-          className={cn(
-            'bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px]',
-            buttonProps?.className,
-          )}
-        >
-          +
-        </Button>
-      </motion.div>
+      <div className="flex items-center gap-5">
+        <Users className="h-5 w-5 text-muted-foreground ml-3" />
+        <div className="flex items-center gap-x-1 font-semibold">
+          <SlidingNumber
+            number={number}
+            {...slidingNumberProps}
+            className={cn("text-lg", slidingNumberProps?.className)}
+          />
+          <p className="">Children</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            size="icon"
+            {...buttonProps}
+            onClick={() => setNumber(number - 1)}
+            className={cn(
+              "bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px]",
+              buttonProps?.className
+            )}
+          >
+            -
+          </Button>
+        </motion.div>
+
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            size="icon"
+            {...buttonProps}
+            onClick={() => setNumber(number + 1)}
+            className={cn(
+              "bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px]",
+              buttonProps?.className
+            )}
+          >
+            +
+          </Button>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }
- 
+
 export { Counter, type CounterProps };

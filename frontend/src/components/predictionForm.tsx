@@ -1,20 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardTitle } from "./ui/card";
 import { Slider } from "./ui/slider";
-import { Cigarette, Mars } from "lucide-react";
+import { ChevronRight, Cigarette, Loader2, MapPin, Mars } from "lucide-react";
 import { Venus } from "lucide-react";
 import { Counter } from "./ui/shadcn-io/counter";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Button } from "./ui/button";
+import axios from "axios";
 
-const PredictionForm = () => {
-  const [loading, setLoading] = useState(false);
-
+const PredictionForm = ({
+  loading,
+  setLoading,
+  premium,
+  setPremium,
+}: {
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  premium: number | null;
+  setPremium: React.Dispatch<React.SetStateAction<number | null>>;
+}) => {
   const [formData, setFormData] = useState({
     age: 25,
     bmi: 22,
     smoker: false,
-    Children: 0,
+    children: 0,
     region: "northwest",
-    gender: "male",
+    sex: "male",
   });
 
   const handleChange = (field: string, value: string | number | boolean) => {
@@ -24,18 +43,43 @@ const PredictionForm = () => {
     }));
   };
 
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await axios.post("http://localhost:5000/predict", formData, {
+        headers: { "Content-Type": "application/json" },
+      });
+      setPremium(response.data.premium);
+    } catch (error) {
+      alert(error);
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (premium !== null) handleSubmit();
+  }, [formData]);
+
   return (
     <div className=" mt-6">
-      <Card className="w-[95%] mx-auto">
+      <Card className="w-[95%] mx-auto pb-0">
         <CardTitle className="text-2xl font-bold mx-10">
           Personal Details
         </CardTitle>
-        <div className="border-b border-gray-200 mx-6" />
+        <div className="border-b border-border mx-6" />
         <CardContent>
-          <form className="grid grid-cols-1 md:grid-cols-2">
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 md:grid-cols-2"
+          >
             <div className="col-span-1 p-4">
               <div className="flex justify-between">
-                <label htmlFor="name">Age</label>
+                <label htmlFor="Age" className="ml-1">
+                  Age
+                </label>
                 <span className="text-primary text-sm font-bold">
                   {formData.age} years
                 </span>
@@ -43,21 +87,23 @@ const PredictionForm = () => {
               <Slider
                 onValueChange={(value) => handleChange("age", value[0])}
                 defaultValue={[25]}
-                min={0}
+                min={18}
                 max={100}
                 className="mt-2 w-full"
               />
               <div className="flex justify-between text-slate-500 text-xs mt-2">
-                <span>0</span>
+                <span>18</span>
                 <span>100</span>
               </div>
             </div>
             <div className="col-span-1 p-4">
               <div className="flex justify-between">
-                <label htmlFor="name">BMI</label>
+                <label htmlFor="BMI" className="ml-1">
+                  BMI
+                </label>
                 <span
                   className={`text-sm font-bold ${
-                    formData.bmi > 25 ? "text-orange-500" : "text-green-600"
+                    formData.bmi >= 25 ? "text-orange-500" : "text-green-600"
                   }`}
                 >
                   {formData.bmi}
@@ -77,18 +123,20 @@ const PredictionForm = () => {
               </div>
             </div>
             <div className="col-span-1 p-4 ">
-              <label htmlFor="name">Gender</label>
-              <div className="flex bg-slate-100 p-1 rounded-lg mt-2">
+              <label htmlFor="sex" className="ml-1">
+                sex
+              </label>
+              <div className="flex bg-input p-1 rounded-lg mt-2">
                 {["male", "female"].map((g) => (
                   <button
                     key={g}
                     onClick={(e) => {
                       e.preventDefault();
-                      handleChange("gender", g);
+                      handleChange("sex", g);
                     }}
                     className={`flex justify-center items-center gap-2 py-2 w-full text-sm font-medium rounded-md capitalize transition-all  ${
-                      formData.gender === g
-                        ? "bg-white text-primary shadow-sm"
+                      formData.sex === g
+                        ? "bg-primary-foreground text-primary shadow-sm"
                         : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
@@ -103,7 +151,7 @@ const PredictionForm = () => {
                 e.preventDefault();
                 handleChange("smoker", !formData.smoker);
               }}
-              className="flex items-center justify-between m-4 h-fit col-span-1 my-auto bg-slate-50 p-4 rounded-lg border border-slate-200"
+              className="flex items-center justify-between m-4 h-fit col-span-1 my-auto bg-input p-4 rounded-lg border cursor-pointer border-border/40"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -137,13 +185,54 @@ const PredictionForm = () => {
               </button>
             </div>
             <div className="col-span-1 p-4">
-              <label htmlFor="name">Children</label>
+              <label htmlFor="name" className="ml-1">
+                Children
+              </label>
               <Counter
                 onClick={(e) => e.preventDefault()}
-                number={formData.Children}
-                setNumber={(number) => handleChange("Children", number)}
+                number={formData.children}
+                setNumber={(number) =>
+                  handleChange("children", Math.max(0, Math.min(20, number)))
+                }
                 className="mt-2"
               />
+            </div>
+            <div className="col-span-1 p-4">
+              <label htmlFor="region" className="ml-1">
+                Region
+              </label>
+              <Select
+                required
+                onValueChange={(value) => handleChange("region", value)}
+              >
+                <SelectTrigger className="w-full bg-input mt-2 py-5">
+                  <div className="flex items-center gap-x-5 ">
+                    <MapPin className="size-5 " />
+                    <SelectValue placeholder={"Select Your Region"} />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Regions</SelectLabel>
+                    <SelectItem value="northwest">Northwest</SelectItem>
+                    <SelectItem value="northeast">Northeast</SelectItem>
+                    <SelectItem value="southwest">Southwest</SelectItem>
+                    <SelectItem value="southeast">Southeast</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-1 md:col-span-2 h-24 mt-4 space-y-2">
+              <div className="border-b border-border" />
+              <Button type="submit" className="w-full mt-4 shadow-lg">
+                {loading ? (
+                  <Loader2 className="animate-spin size-5" />
+                ) : (
+                  <>
+                    Calculate Premium <ChevronRight />{" "}
+                  </>
+                )}{" "}
+              </Button>
             </div>
           </form>
         </CardContent>
