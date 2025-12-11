@@ -3,5 +3,6 @@ seaborn
 flask
 pandas
 scikit-learn==1.5.1
+flask_cors
 
 # -e .
