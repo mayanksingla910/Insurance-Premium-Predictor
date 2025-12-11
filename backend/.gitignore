@@ -162,23 +162,3 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 # React / Node
-node_modules/
-dist/
-.vite/
-
-# Build outputs
-frontend/dist/
-backend/dist/
-
-# ML artifacts (do NOT commit binaries)
-artifacts/*.pkl
-
-# Logs
-*.log
-
-# VS Code
-.vscode/
-
-# OS junk
-.DS_Store
-Thumbs.db
