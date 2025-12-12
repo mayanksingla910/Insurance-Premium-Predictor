@@ -56,7 +56,8 @@ const PredictionForm = ({
           headers: { "Content-Type": "application/json" },
         }
       );
-      setPremium(response.data.premium);
+      if(response.data.premium < 200) setPremium(200);
+      else setPremium(response.data.premium);
     } catch (error) {
       alert(error);
       console.error(error);
