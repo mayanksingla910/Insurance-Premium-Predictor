@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardTitle } from "./ui/card";
 import { Slider } from "./ui/slider";
 import { ChevronRight, Cigarette, Loader2, MapPin, Mars } from "lucide-react";
@@ -35,6 +35,8 @@ const PredictionForm = ({
     region: "northwest",
     sex: "male",
   });
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firstRun = useRef(true);
 
   const handleChange = (field: string, value: string | number | boolean) => {
     setFormData((prev) => ({
@@ -47,9 +49,13 @@ const PredictionForm = ({
     if (e) e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/predict", formData, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await axios.post(
+        "https://insurance-premium-predictor-fuwb.onrender.com/predict",
+        formData,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
       setPremium(response.data.premium);
     } catch (error) {
       alert(error);
@@ -60,12 +66,27 @@ const PredictionForm = ({
   };
 
   useEffect(() => {
-    if (premium !== null) handleSubmit();
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
+    if (premium === null) return;
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    timeoutRef.current = setTimeout(() => {
+      handleSubmit();
+    }, 500);
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [formData]);
 
   return (
     <div className=" mt-6">
-      <Card className="w-[95%] mx-auto pb-0">
+      <Card className="w-[95%] mx-auto ">
         <CardTitle className="text-2xl font-bold mx-10">
           Personal Details
         </CardTitle>
@@ -112,7 +133,7 @@ const PredictionForm = ({
               <Slider
                 onValueChange={(value) => handleChange("bmi", value[0])}
                 defaultValue={[22]}
-                min={10}
+                min={15}
                 max={50}
                 step={0.1}
                 className={`mt-2 w-full`}
@@ -222,9 +243,9 @@ const PredictionForm = ({
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-1 md:col-span-2 h-24 mt-4 space-y-2">
+            <div className="col-span-1 md:col-span-2  mt-4 space-y-2">
               <div className="border-b border-border" />
-              <Button type="submit" className="w-full mt-4 shadow-lg">
+              <Button type="submit" className="w-full my-4 shadow-lg">
                 {loading ? (
                   <Loader2 className="animate-spin size-5" />
                 ) : (

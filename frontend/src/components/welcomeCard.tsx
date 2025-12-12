@@ -16,10 +16,10 @@ const WelcomeCard = () => {
       />
       <div className="m-10 absolute w-[90%]">
         <div className="">
-          <h1 className="text-primary-foreground text-3xl font-bold w-fit">
+          <h1 className="text-primary-foreground text-2xl sm:text-3xl font-bold w-fit transition-all duration-300">
             Insurance Premium Predictor
           </h1>
-          <h2 className="text-muted text-lg mt-1 w-fit">
+          <h2 className="text-muted text-md sm:text-lg mt-1 w-fit transition-all duration-300">
             Predict your insurance premium easily!
           </h2>
         </div>
@@ -27,7 +27,7 @@ const WelcomeCard = () => {
           <motion.img
             src="insurance-concept-illustration_86047-116-removebg-preview.png"
             alt="insurance"
-            className="absolute h-40 right-0 -bottom-14 hidden md:block"
+            className="absolute h-32 md:h-40 right-0 sm:-right-5 md:right-0 -bottom-28 sm:-bottom-14 transition-all duration-300"
             animate={{
               y: [0, -5, 5, -3, 0],
               rotate: [0, -1, 1, -0.5, 0],
