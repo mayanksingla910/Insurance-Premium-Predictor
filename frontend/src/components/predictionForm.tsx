@@ -49,6 +49,14 @@ const PredictionForm = ({
     }));
   };
 
+  const handleBmiCalculation = async ( bmi: number) => {
+
+    setFormData((prev) => ({
+      ...prev,
+      bmi: bmi,
+    }));
+  };
+
 const handleSubmit = async (e?: React.FormEvent) => {
   if (e) e.preventDefault();
 
@@ -150,7 +158,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
                       </p>
                     </DialogTrigger>
                     <DialogContent className="w-full">
-                      <CalculateBmiModel />
+                      <CalculateBmiModel handleBmiCalculation={handleBmiCalculation}/>
                     </DialogContent>
                   </Dialog>
                   <span
