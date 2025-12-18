@@ -4,6 +4,7 @@ import { Slider } from "./ui/slider";
 import { ChevronRight, Cigarette, Loader2, MapPin, Mars } from "lucide-react";
 import { Venus } from "lucide-react";
 import { Counter } from "./ui/shadcn-io/counter";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,8 @@ import {
 } from "./ui/select";
 import { Button } from "./ui/button";
 import axios from "axios";
+import CalculateBmiModel from "./calculateBmiModel";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 
 const PredictionForm = ({
   loading,
@@ -36,6 +39,7 @@ const PredictionForm = ({
     sex: "male",
   });
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const coldStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
 
   const handleChange = (field: string, value: string | number | boolean) => {
@@ -45,26 +49,41 @@ const PredictionForm = ({
     }));
   };
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+const handleSubmit = async (e?: React.FormEvent) => {
+  if (e) e.preventDefault();
+
+  if (coldStartTimerRef.current) {
+    clearTimeout(coldStartTimerRef.current);
+  }
+  
+  coldStartTimerRef.current = setTimeout(() => {
+    toast.info("Please wait, the server might be experiencing a cold start.");
+  }, 15000);
+
+  try {
     setLoading(true);
-    try {
-      const response = await axios.post(
-        "https://insurance-premium-predictor-fuwb.onrender.com/predict",
-        formData,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      if(response.data.premium < 200) setPremium(200);
-      else setPremium(response.data.premium);
-    } catch (error) {
-      alert(error);
-      console.error(error);
-    } finally {
-      setLoading(false);
+
+    const response = await axios.post(
+      "https://insurance-premium-predictor-fuwb.onrender.com/predict",
+      formData,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    if (response.data.premium < 200) setPremium(200);
+    else setPremium(response.data.premium);
+  } catch (error) {
+    toast.error("Something went wrong. Try again.");
+    console.error(error);
+  } finally {
+    setLoading(false);
+
+    if (coldStartTimerRef.current) {
+      clearTimeout(coldStartTimerRef.current);
+      coldStartTimerRef.current = null;
     }
-  };
+  }
+};
+
 
   useEffect(() => {
     if (firstRun.current) {
@@ -123,13 +142,25 @@ const PredictionForm = ({
                 <label htmlFor="BMI" className="ml-1">
                   BMI
                 </label>
-                <span
-                  className={`text-sm font-bold ${
-                    formData.bmi >= 25 ? "text-orange-500" : "text-green-600"
-                  }`}
-                >
-                  {formData.bmi}
-                </span>
+                <div className="flex items-center gap-x-4">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <p className="p-1 text-xs text-primary hover:underline cursor-pointer">
+                        Check BMI
+                      </p>
+                    </DialogTrigger>
+                    <DialogContent className="w-full">
+                      <CalculateBmiModel />
+                    </DialogContent>
+                  </Dialog>
+                  <span
+                    className={`text-sm font-bold ${
+                      formData.bmi >= 25 ? "text-orange-500" : "text-green-600"
+                    }`}
+                  >
+                    {formData.bmi}
+                  </span>
+                </div>
               </div>
               <Slider
                 onValueChange={(value) => handleChange("bmi", value[0])}
@@ -246,7 +277,7 @@ const PredictionForm = ({
             </div>
             <div className="col-span-1 md:col-span-2  mt-4 space-y-2">
               <div className="border-b border-border" />
-              <Button type="submit" className="w-full my-4 shadow-lg">
+              <Button type="submit" disabled={loading} className="w-full my-4 shadow-lg">
                 {loading ? (
                   <Loader2 className="animate-spin size-5" />
                 ) : (

@@ -19,3 +19,24 @@
 .float {
   animation: float 6s ease-in-out infinite;
 }
+
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 9999px;
+  transform: scale(0);
+  animation: ripple-animation 600ms ease-out;
+  background-color: #1e40af23;
+  pointer-events: none;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
