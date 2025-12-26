@@ -10,6 +10,13 @@ Designed for individuals seeking quick insurance insights and scalable for compa
 
 ---
 
+## Deployment
+
+- **Frontend:** [Live on Vercel](https://insurest.vercel.app)  
+- **Backend:** [API on Render](https://insurance-premium-predictor-fuwb.onrender.com)
+
+---
+
 ## **Features**  
 
 - **Insurance Premium Prediction** – Accurate estimates with minimal input.  
@@ -71,7 +78,7 @@ Contributions are welcome!
 
 ## License
 
-MIT License (recommended for maximum adoption).  
+MIT License 
 
 ## Roadmap / Future Improvements
 
