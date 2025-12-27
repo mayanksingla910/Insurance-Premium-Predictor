@@ -5,15 +5,20 @@ import { createRipple } from "./ui/createRippple";
 import { Button } from "./ui/button";
 
 const CalculateBmiModel = ({
+  setWeightMetric,
+  setHeightMetric,
+  weightMetric,
+  heightMetric,
   handleBmiCalculation,
 }: {
   handleBmiCalculation: (bmi: number) => void;
+  setWeightMetric: React.Dispatch<React.SetStateAction<number>>;
+  setHeightMetric: React.Dispatch<React.SetStateAction<number>>;
+  weightMetric: number;
+  heightMetric: number;
 }) => {
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
   const [bmi, setBmi] = useState<number | null>(null);
-
-  const [weightMetric, setWeightMetric] = useState(70);
-  const [heightMetric, setHeightMetric] = useState(175);
 
   const [weightImperial, setWeightImperial] = useState(154);
   const [feet, setFeet] = useState(5);

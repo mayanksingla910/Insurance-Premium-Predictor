@@ -38,6 +38,10 @@ const PredictionForm = ({
     region: "northwest",
     sex: "male",
   });
+
+  const [weightMetric, setWeightMetric] = useState(70);
+  const [heightMetric, setHeightMetric] = useState(175);
+
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const coldStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firstRun = useRef(true);
@@ -49,49 +53,48 @@ const PredictionForm = ({
     }));
   };
 
-  const handleBmiCalculation = async ( bmi: number) => {
-
+  const handleBmiCalculation = async (bmi: number) => {
     setFormData((prev) => ({
       ...prev,
-      bmi: bmi,
+
+      bmi: bmi < 15 ? 15 : bmi > 50 ? 50 : bmi,
     }));
   };
 
-const handleSubmit = async (e?: React.FormEvent) => {
-  if (e) e.preventDefault();
-
-  if (coldStartTimerRef.current) {
-    clearTimeout(coldStartTimerRef.current);
-  }
-  
-  coldStartTimerRef.current = setTimeout(() => {
-    toast.info("Please wait, the server might be experiencing a cold start.");
-  }, 15000);
-
-  try {
-    setLoading(true);
-
-    const response = await axios.post(
-      "https://insurance-premium-predictor-fuwb.onrender.com/predict",
-      formData,
-      { headers: { "Content-Type": "application/json" } }
-    );
-
-    if (response.data.premium < 200) setPremium(200);
-    else setPremium(response.data.premium);
-  } catch (error) {
-    toast.error("Something went wrong. Try again.");
-    console.error(error);
-  } finally {
-    setLoading(false);
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
     if (coldStartTimerRef.current) {
       clearTimeout(coldStartTimerRef.current);
-      coldStartTimerRef.current = null;
     }
-  }
-};
 
+    coldStartTimerRef.current = setTimeout(() => {
+      toast.info("Please wait, the server might be experiencing a cold start.");
+    }, 15000);
+
+    try {
+      setLoading(true);
+
+      const response = await axios.post(
+        "https://insurance-premium-predictor-fuwb.onrender.com/predict",
+        formData,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data.premium < 200) setPremium(200);
+      else setPremium(response.data.premium);
+    } catch (error) {
+      toast.error("Something went wrong. Try again.");
+      console.error(error);
+    } finally {
+      setLoading(false);
+
+      if (coldStartTimerRef.current) {
+        clearTimeout(coldStartTimerRef.current);
+        coldStartTimerRef.current = null;
+      }
+    }
+  };
 
   useEffect(() => {
     if (firstRun.current) {
@@ -156,9 +159,15 @@ const handleSubmit = async (e?: React.FormEvent) => {
                       <p className="p-1 text-xs text-primary hover:underline cursor-pointer">
                         Check BMI
                       </p>
-                    </DialogTrigger>
+                    </DialogTrigger>{" "}
                     <DialogContent className="w-full">
-                      <CalculateBmiModel handleBmiCalculation={handleBmiCalculation}/>
+                      <CalculateBmiModel
+                        setWeightMetric={setWeightMetric}
+                        setHeightMetric={setHeightMetric}
+                        weightMetric={weightMetric}
+                        heightMetric={heightMetric}
+                        handleBmiCalculation={handleBmiCalculation}
+                      />
                     </DialogContent>
                   </Dialog>
                   <span
@@ -171,6 +180,7 @@ const handleSubmit = async (e?: React.FormEvent) => {
                 </div>
               </div>
               <Slider
+                value = {[formData.bmi]}
                 onValueChange={(value) => handleChange("bmi", value[0])}
                 defaultValue={[22]}
                 min={15}
@@ -285,7 +295,11 @@ const handleSubmit = async (e?: React.FormEvent) => {
             </div>
             <div className="col-span-1 md:col-span-2  mt-4 space-y-2">
               <div className="border-b border-border" />
-              <Button type="submit" disabled={loading} className="w-full my-4 shadow-lg">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full my-4 shadow-lg"
+              >
                 {loading ? (
                   <Loader2 className="animate-spin size-5" />
                 ) : (
